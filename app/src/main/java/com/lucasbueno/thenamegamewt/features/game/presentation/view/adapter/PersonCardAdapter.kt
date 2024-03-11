@@ -70,7 +70,7 @@ class PersonCardAdapter(
 
         fun bind(gameData: GameDataItem) {
             Glide.with(binding.personImageView.context)
-                .load(TEST_GLIDE_URL)
+                .load(gameData.headshot?.url)
                 .placeholder(R.drawable.background)
                 .error(R.drawable.checkmark_error_ic)
                 .listener(object : RequestListener<Drawable> {
@@ -94,7 +94,8 @@ class PersonCardAdapter(
                         return false
                     }
                 })
-                .into(binding.personImageView)
+                .dontAnimate().into(binding.personImageView)
+//                .into(binding.personImageView)
 
 
             itemView.setOnClickListener {
