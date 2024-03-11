@@ -1,5 +1,6 @@
 package com.lucasbueno.thenamegamewt.features.game.presentation.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lucasbueno.thenamegamewt.features.game.domain.model.GameDataItem
@@ -11,25 +12,25 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 private const val NUMBER_OF_CARDS = 6
+private const val TIMER_DELAY = 50L
+private const val ZERO_INT = 0
+private const val TIMER_DURATION = 6000L
 
 @HiltViewModel
 class GameScreenViewModel @Inject constructor(
     private val useCase: GetGameDataUseCase
 ) : ViewModel() {
 
-    private val _stateFlow = MutableStateFlow<GameScreenState>(GameScreenState())
+    private val _stateFlow = MutableStateFlow(GameScreenState())
     val stateFlow = _stateFlow.asStateFlow()
 
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
-    private val timerDuration = 6000L
-    private var currentTime = timerDuration
     private var timerJob: Job? = null
 
     fun getGameData() {
@@ -38,8 +39,8 @@ class GameScreenViewModel @Inject constructor(
                 useCase.invoke()
             }.onSuccess { data ->
                 handleSuccess(data)
-            }.onFailure {
-                _eventFlow.emit(UiEvent.Error(it))
+            }.onFailure { error ->
+                _eventFlow.emit(UiEvent.Error(error))
             }
         }
     }
@@ -60,11 +61,11 @@ class GameScreenViewModel @Inject constructor(
 
     private fun handleSuccess(list: List<GameDataItem>) {
         val randomList = list.shuffled().take(NUMBER_OF_CARDS)
-        val correctAnswerId = randomList.shuffled().take(1)
+        val correctAnswerItem = randomList.shuffled().first()
 
         _stateFlow.value = stateFlow.value.copy(
             data = randomList,
-            correctAnswerId = correctAnswerId.first()
+            correctAnswerItem = correctAnswerItem
         )
     }
 
@@ -74,56 +75,67 @@ class GameScreenViewModel @Inject constructor(
         }
 
         timerJob = viewModelScope.launch {
+            setTimerVisible(true)
             val startTime = System.currentTimeMillis()
-            val endTime = startTime + timerDuration
+            var remainingTime = TIMER_DURATION
 
-            while (currentTime > 0 && isActive) {
-                currentTime = endTime - System.currentTimeMillis()
-                if (currentTime < 0) {
-                    currentTime = 0
+            while (remainingTime > ZERO_INT) {
+                remainingTime = TIMER_DURATION - (System.currentTimeMillis() - startTime)
+
+                if (remainingTime < ZERO_INT) {
+                    remainingTime = 0
                 }
 
                 _stateFlow.value = stateFlow.value.copy(
-                    progressState = (currentTime.toFloat() / timerDuration * 100).toInt()
+                    progressState = (remainingTime.toFloat() / TIMER_DURATION * 100).toInt()
                 )
 
-                delay(100)
+                delay(TIMER_DELAY)
             }
 
-            if (currentTime <= 0) {
+            _eventFlow.emit(UiEvent.ShowGameOverDialog)
+            setTimerVisible(false)
+        }
+    }
+
+    fun onVerifyTimer() {
+        if (stateFlow.value.progressState == ZERO_INT) {
+            viewModelScope.launch {
                 _eventFlow.emit(UiEvent.ShowGameOverDialog)
             }
         }
+    }
+
+    fun setGameMode(isPracticeMode: Boolean) = viewModelScope.launch {
+        _stateFlow.value = stateFlow.value.copy(isPracticeMode = isPracticeMode)
+        if (!isPracticeMode) {
+            _eventFlow.emit(UiEvent.SetTimerMode)
+        }
+    }
+
+    private fun setTimerVisible(isVisible: Boolean) {
+        _stateFlow.value = _stateFlow.value.copy(isTimerVisible = isVisible)
     }
 
     private fun addToCounter() {
         _stateFlow.value = stateFlow.value.copy(counter = stateFlow.value.counter + 1)
     }
-
-    fun onVerifyTimer() {
-        if (stateFlow.value.progressState <= 0) {
-                viewModelScope.launch {
-                _eventFlow.emit(UiEvent.ShowGameOverDialog)
-            }
-        }
-    }
-
-    fun setGameMode(isPracticeMode: Boolean) {
-        _stateFlow.value = stateFlow.value.copy(isPracticeMode = isPracticeMode)
-    }
 }
 
 data class GameScreenState(
     val data: List<GameDataItem> = listOf(),
-    val correctAnswerId: GameDataItem? = null,
+    val correctAnswerItem: GameDataItem? = null,
     val progressState: Int = 100,
     val counter: Int = 0,
     val isAnswerCorrectState: Boolean = false,
-    val isPracticeMode: Boolean = true
+    val isPracticeMode: Boolean = true,
+    val isTimerVisible: Boolean = false
 )
 
 sealed class UiEvent {
     data class Error(val error: Throwable) : UiEvent()
-    object ShowGameOverDialog : UiEvent()
-    object ShowSuccessAction : UiEvent()
+    data object ShowGameOverDialog : UiEvent()
+    data object ShowSuccessAction : UiEvent()
+
+    data object SetTimerMode : UiEvent()
 }

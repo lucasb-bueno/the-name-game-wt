@@ -1,4 +1,9 @@
 <resources>
     <string name="app_name">TheNameGameWT</string>
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="practice_mode">Practice Mode</string>
+    <string name="timed_mode">Timed Mode</string>
+    <string name="game_over">Game Over</string>
+    <string name="you_scored">You scored %d/%d</string>
+    <string name="confirm_button_text">OK</string>
 </resources>

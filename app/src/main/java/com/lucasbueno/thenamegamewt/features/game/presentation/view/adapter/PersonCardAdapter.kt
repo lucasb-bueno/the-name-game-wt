@@ -24,25 +24,12 @@ private const val TEST_GLIDE_URL =
     "https://play-lh.googleusercontent.com/NuJSG_bIoce6kvvtJnULAf34_Rsa1j-HDEt4MWTOrL_3XA51QH9qOQR5UmAYxPI96jA=w600-h300-pc0xffffff-pd"
 private const val TEST_WT_URL = "https://namegame.willowtreeapps.com/images/ameir.jpeg"
 
-private const val HANDLER_DELAY = 1000L
-
 class PersonCardAdapter(
     private val listener: OnItemClickListener,
 ) : ListAdapter<GameDataItem, PersonCardAdapter.PersonCardViewHolder>(GameDataDiffCallback) {
 
-    private var correctAnswerId: String = ""
-    private var isCorrectAnswer = false
-
     interface OnItemClickListener {
         fun onItemClick(position: Int, gameData: GameDataItem)
-    }
-
-    fun setCorrectAnswerId(name: String) {
-        correctAnswerId = name
-    }
-
-    fun isCorrectAnswer(isCorrect: Boolean) {
-        isCorrectAnswer = isCorrect
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): PersonCardViewHolder {
@@ -70,7 +57,7 @@ class PersonCardAdapter(
 
         fun bind(gameData: GameDataItem) {
             Glide.with(binding.personImageView.context)
-                .load(gameData.headshot?.url)
+                .load(TEST_GLIDE_URL)
                 .placeholder(R.drawable.background)
                 .error(R.drawable.checkmark_error_ic)
                 .listener(object : RequestListener<Drawable> {
@@ -94,33 +81,7 @@ class PersonCardAdapter(
                         return false
                     }
                 })
-                .dontAnimate().into(binding.personImageView)
-//                .into(binding.personImageView)
-
-
-            itemView.setOnClickListener {
-                listener.onItemClick(adapterPosition, gameData)
-
-                binding.overlayFrame.visibility = View.VISIBLE
-
-                binding.overlayFrame.apply {
-                    visibility = View.VISIBLE
-                    setBackgroundColor(
-                        if (isCorrectAnswer) ContextCompat.getColor(context, R.color.checkmark_green)
-                        else ContextCompat.getColor(context, R.color.checkmark_red)
-                    )
-                }
-
-                binding.checkmarkImageView.setImageResource(
-                    if (isCorrectAnswer) R.drawable.checkmark_ic
-                    else R.drawable.checkmark_error_ic
-                )
-
-                val handler = Handler(Looper.getMainLooper())
-                handler.postDelayed({
-                    binding.overlayFrame.visibility = View.GONE
-                }, HANDLER_DELAY)
-            }
+                .into(binding.personImageView)
         }
     }
 }

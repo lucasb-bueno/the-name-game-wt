@@ -14,24 +14,22 @@
         app:navigationIcon="@drawable/arrow_back_ic"
         app:theme="@style/AppTheme"
         app:title="Test Title"
-        app:titleTextColor="@color/white" >
+        app:titleTextColor="@color/white" />
 
-        <ProgressBar
-            android:id="@+id/progressBar"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="32dp"
-            android:layout_height="32dp"
-            android:indeterminate="false"
-            android:progressDrawable="@drawable/circular_timer"
-            android:visibility="gone"
-            android:progress="0"
-            tools:progress="50"
-            tools:visibility="visible"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintBottom_toBottomOf="parent"/>
-
-    </com.google.android.material.appbar.MaterialToolbar>
+    <ProgressBar
+        android:id="@+id/progressBar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="32dp"
+        android:layout_height="32dp"
+        android:indeterminate="false"
+        android:progressDrawable="@drawable/circular_timer"
+        android:visibility="gone"
+        android:progress="0"
+        tools:progress="100"
+        tools:visibility="visible"
+        android:layout_margin="8dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/scrollView"

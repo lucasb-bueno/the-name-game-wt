@@ -25,9 +25,14 @@ import com.lucasbueno.thenamegamewt.features.game.presentation.view.adapter.Pers
 import com.lucasbueno.thenamegamewt.features.game.presentation.viewmodel.GameScreenState
 import com.lucasbueno.thenamegamewt.features.game.presentation.viewmodel.GameScreenViewModel
 import com.lucasbueno.thenamegamewt.features.game.presentation.viewmodel.UiEvent
+import com.lucasbueno.thenamegamewt.utils.GameOverDialogFragment
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
+
+private const val HANDLER_DELAY = 500L
 
 @AndroidEntryPoint
 class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.OnItemClickListener {
@@ -39,27 +44,28 @@ class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.O
     private val personCardAdapter: PersonCardAdapter = PersonCardAdapter(this)
     private val binding get() = _binding!!
 
+    private val args: GameScreenFragmentArgs by navArgs()
+
     private var correctAnswerId: String? = null
 
     private var isCorrectAnswer: Boolean = false
 
     private var counter = 0
 
-    private val args: GameScreenFragmentArgs by navArgs()
+    private var listLength = 0
 
-    private var gameOverDialog: AlertDialog? = null
+    private var gameOverDialog: GameOverDialogFragment? = null
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         _binding = FragmentGameBinding.bind(view)
         setupToolbar()
         setupRecyclerView()
-        setupGameMode(args.isPractice)
-        initObservers()
-
         if (savedInstanceState == null) {
             viewModel.getGameData()
+            setupGameMode(args.isPractice)
         }
+        initObservers()
     }
 
     private fun setupToolbar() {
@@ -86,19 +92,14 @@ class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.O
     }
 
     private fun setupGameMode(isPracticeMode: Boolean) {
-//        TODO("Move Call to viewmodel and let it decide")
-        val toolBarTitle = if (isPracticeMode) "Practice Mode" else "Timed Mode"
-        viewModel.setGameMode(isPracticeMode = isPracticeMode)
+        viewModel.setGameMode(isPracticeMode)
 
         if (!isPracticeMode) {
             setupTimerMode()
         }
-
-        binding.toolbar.title = toolBarTitle
     }
 
     private fun setupTimerMode() {
-        binding.progressBar.visibility = View.VISIBLE
         viewModel.startTimer()
     }
 
@@ -114,9 +115,10 @@ class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.O
 
     private fun handleState(state: GameScreenState) {
         isCorrectAnswer = state.isAnswerCorrectState
-        handleList(state.data, state.correctAnswerId)
-        updateTimer(state.progressState)
+        handleList(state.data, state.correctAnswerItem)
+        updateTimer(state.progressState, state.isTimerVisible)
         updateCounter(state.counter)
+        updateUi(state.isPracticeMode)
     }
 
     private fun handleEvent(event: UiEvent) {
@@ -124,16 +126,8 @@ class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.O
             is UiEvent.Error -> handleError(event.error)
             is UiEvent.ShowGameOverDialog -> showDialog()
             is UiEvent.ShowSuccessAction -> updateList()
+            is UiEvent.SetTimerMode -> setupTimerMode()
         }
-    }
-
-    private fun updateCounter(num: Int) {
-        counter = num
-    }
-
-    private fun updateTimer(progress: Int) {
-        binding.progressBar.progress = progress
-        viewModel.onVerifyTimer()
     }
 
     private fun handleError(error: Throwable) {
@@ -144,84 +138,82 @@ class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.O
         ).show()
     }
 
+    private fun updateUi(isPracticeMode: Boolean) {
+        binding.toolbar.title =
+            if (isPracticeMode) getString(R.string.practice_mode) else getString(R.string.timed_mode)
+    }
+
     private fun handleList(
         data: List<GameDataItem>,
-        correctAnswerObject: GameDataItem?
+        correctAnswerItem: GameDataItem?
     ) {
-        binding.personNameTv.text =
-            correctAnswerObject?.firstName + " " + correctAnswerObject?.lastName
+        val fullName =
+            "${correctAnswerItem?.firstName.orEmpty()} ${correctAnswerItem?.lastName.orEmpty()}".trim()
+        binding.personNameTv.text = fullName
 
-        correctAnswerId = correctAnswerObject?.id.toString()
-
-        personCardAdapter.setCorrectAnswerId(correctAnswerId!!)
+        correctAnswerId = correctAnswerItem?.id
+        listLength = data.size
 
         personCardAdapter.submitList(data)
     }
 
+    private fun updateCounter(num: Int) {
+        counter = num
+    }
+
+    private fun updateTimer(progress: Int, isVisible: Boolean) {
+        binding.progressBar.progress = progress
+        binding.progressBar.visibility = if (isVisible) View.VISIBLE else View.GONE
+        viewModel.onVerifyTimer()
+    }
+
     override fun onItemClick(position: Int, gameData: GameDataItem) {
         viewModel.onItemClicked(gameData, correctAnswerId)
-        personCardAdapter.isCorrectAnswer(isCorrectAnswer)
-//        updateUiForSelectedItem(position, isCorrectAnswer)
+        updateUiForSelectedItem(position, isCorrectAnswer)
 
         Toast.makeText(context, "Clicked on ${gameData.firstName}", Toast.LENGTH_SHORT).show()
     }
 
-//    private fun updateUiForSelectedItem(position: Int, isCorrectAnswer: Boolean) {
-//        // Find the ViewHolder for the clicked position
-//        val viewHolder = binding.recyclerView.findViewHolderForAdapterPosition(position)
-//                as? PersonCardAdapter.PersonCardViewHolder
-//
-//        viewHolder?.let { holder ->
-//            // Update the overlay frame background color
-//            holder.binding.overlayFrame.apply {
-//                visibility = View.VISIBLE
-//                setBackgroundColor(
-//                    ContextCompat.getColor(
-//                        requireContext(),
-//                        if (isCorrectAnswer) {
-//                            R.color.checkmark_green
-//                        } else {
-//                            R.color.checkmark_red
-//                        }
-//                    )
-//                )
-//            }
-//
-//            // Update the checkmark image
-//            holder.binding.checkmarkImageView.setImageResource(
-//                if (isCorrectAnswer) R.drawable.checkmark_ic else R.drawable.checkmark_error_ic
-//            )
-//
-//            // Set a delay to hide the overlay frame
-//            val handler = Handler(Looper.getMainLooper())
-//            handler.postDelayed({
-//                holder.binding.overlayFrame.visibility = View.GONE
-//            }, 1000)
-//        }
-//    }
+    private fun updateUiForSelectedItem(position: Int, isCorrectAnswer: Boolean) {
+        val viewHolder = binding.recyclerView.findViewHolderForAdapterPosition(position)
+                as? PersonCardAdapter.PersonCardViewHolder
+
+        viewHolder?.let { holder ->
+            holder.binding.overlayFrame.apply {
+                visibility = View.VISIBLE
+                setBackgroundColor(
+                    ContextCompat.getColor(
+                        requireContext(),
+                        if (isCorrectAnswer) {
+                            R.color.checkmark_green
+                        } else {
+                            R.color.checkmark_red
+                        }
+                    )
+                )
+            }
+
+            holder.binding.checkmarkImageView.setImageResource(
+                if (isCorrectAnswer) R.drawable.checkmark_ic else R.drawable.checkmark_error_ic
+            )
+
+            lifecycleScope.launch {
+                delay(HANDLER_DELAY)
+                holder.binding.overlayFrame.visibility = View.GONE
+            }
+        }
+    }
 
     private fun updateList() {
         viewModel.getGameData()
     }
 
     private fun showDialog() {
-        if (gameOverDialog?.isShowing == true) {
-            return
-        }
+        if (gameOverDialog != null) return
 
-        gameOverDialog = AlertDialog.Builder(requireContext())
-            .setTitle("Game Over")
-            .setMessage("You scored ${counter}/5.")
-            .setPositiveButton("OK") { dialogInterface, _ ->
-                dialogInterface.dismiss()
-                findNavController().navigateUp()
-            }
-            .setOnDismissListener {
-                gameOverDialog = null
-            }
-            .create()
-
-        gameOverDialog?.show()
+        gameOverDialog = GameOverDialogFragment.newInstance(counter, listLength)
+        GameOverDialogFragment.newInstance(counter, listLength)
+            .show(parentFragmentManager, "GameOverDialogFragment")
     }
 
     override fun onDestroyView() {
