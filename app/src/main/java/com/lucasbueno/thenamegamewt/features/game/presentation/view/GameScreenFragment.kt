@@ -2,11 +2,8 @@ package com.lucasbueno.thenamegamewt.features.game.presentation.view
 
 import android.content.res.Configuration
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
 import android.view.View
 import android.widget.Toast
-import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -63,7 +60,7 @@ class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.O
         setupRecyclerView()
         if (savedInstanceState == null) {
             viewModel.getGameData()
-            setupGameMode(args.isPractice)
+            viewModel.setGameMode(args.isPractice)
         }
         initObservers()
     }
@@ -91,18 +88,6 @@ class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.O
         binding.recyclerView.adapter = personCardAdapter
     }
 
-    private fun setupGameMode(isPracticeMode: Boolean) {
-        viewModel.setGameMode(isPracticeMode)
-
-        if (!isPracticeMode) {
-            setupTimerMode()
-        }
-    }
-
-    private fun setupTimerMode() {
-        viewModel.startTimer()
-    }
-
     private fun initObservers() {
         viewModel.stateFlow.flowWithLifecycle(lifecycle, Lifecycle.State.STARTED)
             .onEach { handleState(it) }
@@ -126,7 +111,6 @@ class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.O
             is UiEvent.Error -> handleError(event.error)
             is UiEvent.ShowGameOverDialog -> showDialog()
             is UiEvent.ShowSuccessAction -> updateList()
-            is UiEvent.SetTimerMode -> setupTimerMode()
         }
     }
 
@@ -164,7 +148,6 @@ class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.O
     private fun updateTimer(progress: Int, isVisible: Boolean) {
         binding.progressBar.progress = progress
         binding.progressBar.visibility = if (isVisible) View.VISIBLE else View.GONE
-        viewModel.onVerifyTimer()
     }
 
     override fun onItemClick(position: Int, gameData: GameDataItem) {

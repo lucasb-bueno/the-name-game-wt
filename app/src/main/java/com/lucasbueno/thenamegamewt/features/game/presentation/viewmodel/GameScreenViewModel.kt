@@ -1,6 +1,5 @@
 package com.lucasbueno.thenamegamewt.features.game.presentation.viewmodel
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.lucasbueno.thenamegamewt.features.game.domain.model.GameDataItem
@@ -33,6 +32,13 @@ class GameScreenViewModel @Inject constructor(
 
     private var timerJob: Job? = null
 
+    fun setGameMode(isPracticeMode: Boolean) = viewModelScope.launch {
+        _stateFlow.value = stateFlow.value.copy(isPracticeMode = isPracticeMode)
+        if (!isPracticeMode) {
+            startTimer()
+        }
+    }
+
     fun getGameData() {
         viewModelScope.launch {
             runCatching {
@@ -52,7 +58,7 @@ class GameScreenViewModel @Inject constructor(
 
             if (isCorrect) {
                 _eventFlow.emit(UiEvent.ShowSuccessAction)
-                addToCounter()
+                addToCounterAndVerifyPoints()
             } else if (stateFlow.value.isPracticeMode) {
                 _eventFlow.emit(UiEvent.ShowGameOverDialog)
             }
@@ -69,7 +75,7 @@ class GameScreenViewModel @Inject constructor(
         )
     }
 
-    fun startTimer() {
+    private fun startTimer() {
         if (timerJob?.isActive == true) {
             return
         }
@@ -82,8 +88,8 @@ class GameScreenViewModel @Inject constructor(
             while (remainingTime > ZERO_INT) {
                 remainingTime = TIMER_DURATION - (System.currentTimeMillis() - startTime)
 
-                if (remainingTime < ZERO_INT) {
-                    remainingTime = 0
+                if (remainingTime <= ZERO_INT) {
+                    _eventFlow.emit(UiEvent.ShowGameOverDialog)
                 }
 
                 _stateFlow.value = stateFlow.value.copy(
@@ -98,26 +104,20 @@ class GameScreenViewModel @Inject constructor(
         }
     }
 
-    fun onVerifyTimer() {
-        if (stateFlow.value.progressState == ZERO_INT) {
-            viewModelScope.launch {
-                _eventFlow.emit(UiEvent.ShowGameOverDialog)
-            }
-        }
-    }
-
-    fun setGameMode(isPracticeMode: Boolean) = viewModelScope.launch {
-        _stateFlow.value = stateFlow.value.copy(isPracticeMode = isPracticeMode)
-        if (!isPracticeMode) {
-            _eventFlow.emit(UiEvent.SetTimerMode)
-        }
+    private fun stopTimer() {
+        timerJob?.cancel()
     }
 
     private fun setTimerVisible(isVisible: Boolean) {
         _stateFlow.value = _stateFlow.value.copy(isTimerVisible = isVisible)
     }
 
-    private fun addToCounter() {
+    private fun addToCounterAndVerifyPoints() = viewModelScope.launch {
+        val listSize = stateFlow.value.data.size
+        if (stateFlow.value.counter >= listSize) {
+            _eventFlow.emit(UiEvent.ShowGameOverDialog)
+            stopTimer()
+        }
         _stateFlow.value = stateFlow.value.copy(counter = stateFlow.value.counter + 1)
     }
 }
@@ -136,6 +136,4 @@ sealed class UiEvent {
     data class Error(val error: Throwable) : UiEvent()
     data object ShowGameOverDialog : UiEvent()
     data object ShowSuccessAction : UiEvent()
-
-    data object SetTimerMode : UiEvent()
 }
