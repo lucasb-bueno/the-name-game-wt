@@ -7,41 +7,33 @@
 
     <ImageView
         android:id="@+id/personImageView"
-        android:layout_width="164dp"
-        android:layout_height="164dp"
-        android:layout_marginStart="1dp"
-        android:layout_marginTop="1dp"
-        android:layout_marginEnd="1dp"
-        android:layout_marginBottom="1dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_margin="1dp"
+        android:scaleType="centerCrop"
         android:visibility="visible"
-        tools:visibility="visible"
-        android:scaleType="centerCrop"/>
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible" />
 
     <FrameLayout
         android:id="@+id/overlayFrame"
-        android:layout_width="164dp"
-        android:layout_height="164dp"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:background="@color/checkmark_green"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
+        android:foregroundGravity="center"
         android:visibility="invisible"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
         tools:visibility="visible">
 
-        <RelativeLayout
+        <ImageView
+            android:id="@+id/checkmarkImageView"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:background="@android:color/transparent">
+            android:layout_height="match_parent"
+            tools:src="@drawable/checkmark_ic"
+            android:layout_margin="35dp"/>
 
-            <ImageView
-                android:id="@+id/checkmarkImageView"
-                android:layout_width="80dp"
-                android:layout_height="80dp"
-                android:layout_centerInParent="true"
-                android:src="@drawable/checkmark_ic" />
-        </RelativeLayout>
     </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

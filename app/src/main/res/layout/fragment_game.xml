@@ -25,11 +25,11 @@
         android:progressDrawable="@drawable/circular_timer"
         android:visibility="gone"
         android:progress="0"
-        tools:progress="100"
-        tools:visibility="visible"
         android:layout_margin="12dp"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        tools:visibility="visible"
+        tools:progress="100"/>
 
     <androidx.core.widget.NestedScrollView
         android:id="@+id/scrollView"

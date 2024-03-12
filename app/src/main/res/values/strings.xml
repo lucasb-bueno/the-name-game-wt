@@ -6,4 +6,7 @@
     <string name="game_over">Game Over</string>
     <string name="you_scored">You scored %d/%d</string>
     <string name="confirm_button_text">OK</string>
+    <string name="welcome_label">Try matching the WillowTree Employee to their photo</string>
+    <string name="practice_mode_button_label">Practice Mode</string>
+    <string name="timed_mode_button_label">Timed Mode</string>
 </resources>

@@ -3,30 +3,8 @@ package com.lucasbueno.thenamegamewt.features.game.data.model
 
 import com.google.gson.annotations.SerializedName
 import com.lucasbueno.thenamegamewt.features.game.domain.model.GameDataItem
-import kotlinx.serialization.SerialName
-import kotlinx.serialization.Serializable
-
-//@Serializable
-//data class GameDataResponseItem(
-//    @SerialName("bio")
-//    val bio: String,
-//    @SerialName("firstName")
-//    val firstName: String,
-//    @SerialName("headshot")
-//    val headshot: Headshot,
-//    @SerialName("id")
-//    val id: String,
-//    @SerialName("jobTitle")
-//    val jobTitle: String,
-//    @SerialName("lastName")
-//    val lastName: String,
-//    @SerialName("slug")
-//    val slug: String,
-//    @SerialName("socialLinks")
-//    val socialLinks: List<SocialLink>,
-//    @SerialName("type")
-//    val type: String
-//)
+import com.lucasbueno.thenamegamewt.features.game.domain.model.Headshot
+import com.lucasbueno.thenamegamewt.features.game.domain.model.SocialLink
 
 data class GameDataResponseItem(
     @SerializedName("bio")
@@ -34,7 +12,7 @@ data class GameDataResponseItem(
     @SerializedName("firstName")
     val firstName: String?,
     @SerializedName("headshot")
-    val headshot: Headshot?,
+    val headshotResponse: HeadshotResponse?,
     @SerializedName("id")
     val id: String?,
     @SerializedName("jobTitle")
@@ -44,27 +22,27 @@ data class GameDataResponseItem(
     @SerializedName("slug")
     val slug: String?,
     @SerializedName("socialLinks")
-    val socialLinks: List<SocialLink>?,
+    val socialLinkResponses: List<SocialLinkResponse>?,
     @SerializedName("type")
     val type: String?
 )
 
-fun GameDataResponseItem.toGameDataItem(): GameDataItem {
+fun GameDataResponseItem.toDomainModel(): GameDataItem {
     return GameDataItem(
         bio = this.bio,
         firstName = this.firstName,
-        headshot = this.headshot?.toDomainModel(),
+        headshot = this.headshotResponse?.toDomainModel(),
         id = this.id,
         jobTitle = this.jobTitle,
         lastName = this.lastName,
         slug = this.slug,
-        socialLinks = this.socialLinks?.map { it.toDomainModel() },
+        socialLinks = this.socialLinkResponses?.map { it.toDomainModel() },
         type = this.type
     )
 }
 
-fun Headshot.toDomainModel(): com.lucasbueno.thenamegamewt.features.game.domain.model.Headshot {
-    return com.lucasbueno.thenamegamewt.features.game.domain.model.Headshot(
+fun HeadshotResponse.toDomainModel(): Headshot {
+    return Headshot(
         alt = this.alt,
         height = this.height,
         id = this.id,
@@ -75,8 +53,8 @@ fun Headshot.toDomainModel(): com.lucasbueno.thenamegamewt.features.game.domain.
     )
 }
 
-fun SocialLink.toDomainModel(): com.lucasbueno.thenamegamewt.features.game.domain.model.SocialLink {
-    return com.lucasbueno.thenamegamewt.features.game.domain.model.SocialLink(
+fun SocialLinkResponse.toDomainModel(): SocialLink {
+    return SocialLink(
         callToAction = this.callToAction,
         type = this.type,
         url = this.url
