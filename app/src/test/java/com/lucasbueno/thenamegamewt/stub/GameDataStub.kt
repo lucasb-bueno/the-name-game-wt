@@ -1,4 +1,4 @@
-package com.lucasbueno.thenamegamewt
+package com.lucasbueno.thenamegamewt.stub
 
 import com.lucasbueno.thenamegamewt.features.game.domain.model.GameDataItem
 import com.lucasbueno.thenamegamewt.features.game.domain.model.Headshot
