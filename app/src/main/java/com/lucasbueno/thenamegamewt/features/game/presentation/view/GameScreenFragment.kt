@@ -19,6 +19,7 @@ import com.lucasbueno.thenamegamewt.R
 import com.lucasbueno.thenamegamewt.databinding.FragmentGameBinding
 import com.lucasbueno.thenamegamewt.features.game.domain.model.GameDataItem
 import com.lucasbueno.thenamegamewt.features.game.presentation.view.adapter.PersonCardAdapter
+import com.lucasbueno.thenamegamewt.features.game.presentation.view.adapter.PersonCardViewHolder
 import com.lucasbueno.thenamegamewt.features.game.presentation.viewmodel.GameScreenState
 import com.lucasbueno.thenamegamewt.features.game.presentation.viewmodel.GameScreenViewModel
 import com.lucasbueno.thenamegamewt.features.game.presentation.viewmodel.UiEvent
@@ -32,13 +33,13 @@ import kotlinx.coroutines.launch
 private const val HANDLER_DELAY = 500L
 
 @AndroidEntryPoint
-class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.OnItemClickListener {
+class GameScreenFragment : Fragment(R.layout.fragment_game) {
 
     private val viewModel: GameScreenViewModel by viewModels()
 
     private var _binding: FragmentGameBinding? = null
 
-    private val personCardAdapter: PersonCardAdapter = PersonCardAdapter(this)
+    private val personCardAdapter: PersonCardAdapter = PersonCardAdapter()
     private val binding get() = _binding!!
 
     private val args: GameScreenFragmentArgs by navArgs()
@@ -86,6 +87,10 @@ class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.O
 
         binding.recyclerView.layoutManager = GridLayoutManager(context, columns)
         binding.recyclerView.adapter = personCardAdapter
+
+        personCardAdapter.itemClicked { gameDataItem, i ->
+            onItemClick(gameData = gameDataItem, position = i)
+        }
     }
 
     private fun initObservers() {
@@ -150,7 +155,7 @@ class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.O
         binding.progressBar.visibility = if (isVisible) View.VISIBLE else View.GONE
     }
 
-    override fun onItemClick(position: Int, gameData: GameDataItem) {
+    private fun onItemClick(position: Int, gameData: GameDataItem) {
         viewModel.onItemClicked(gameData, correctAnswerId)
         updateUiForSelectedItem(position, isCorrectAnswer)
 
@@ -159,7 +164,7 @@ class GameScreenFragment : Fragment(R.layout.fragment_game), PersonCardAdapter.O
 
     private fun updateUiForSelectedItem(position: Int, isCorrectAnswer: Boolean) {
         val viewHolder = binding.recyclerView.findViewHolderForAdapterPosition(position)
-                as? PersonCardAdapter.PersonCardViewHolder
+                as? PersonCardViewHolder
 
         viewHolder?.let { holder ->
             holder.binding.overlayFrame.apply {
