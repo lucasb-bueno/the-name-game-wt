@@ -10,22 +10,12 @@
         android:name="com.lucasbueno.thenamegamewt.features.onboarding.presentation.view.OnboardingFragment"
         android:label="fragment_onboarding"
         tools:layout="@layout/fragment_onboarding">
-        <action
-            android:id="@+id/action_onboardingFragment_to_gameScreenFragment"
-            app:destination="@id/gameScreenFragment"
-            app:enterAnim="@anim/slide_in_right"
-            app:exitAnim="@anim/slide_out_left"
-            app:popEnterAnim="@anim/slide_in_left"
-            app:popExitAnim="@anim/slide_out_right"/>
     </fragment>
 
     <fragment
         android:id="@+id/gameScreenFragment"
         android:name="com.lucasbueno.thenamegamewt.features.game.presentation.view.GameScreenFragment"
-        android:label="GameScreenFragment"
+        android:label="fragment_game_screen"
         tools:layout="@layout/fragment_game">
-        <argument
-            android:name="isPractice"
-            app:argType="boolean" />
     </fragment>
 </navigation>

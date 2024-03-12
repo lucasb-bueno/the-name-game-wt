@@ -1,4 +1,4 @@
-package com.lucasbueno.thenamegamewt.features.game.presentation.view.adapter
+package com.lucasbueno.thenamegamewt.utils
 
 import androidx.recyclerview.widget.DiffUtil
 import com.lucasbueno.thenamegamewt.features.game.domain.model.GameDataItem
