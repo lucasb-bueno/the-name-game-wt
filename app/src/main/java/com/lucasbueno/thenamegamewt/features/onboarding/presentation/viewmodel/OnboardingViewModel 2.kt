@@ -9,25 +9,26 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class OnboardingViewModel @Inject constructor(): ViewModel() {
+class OnboardingViewModel @Inject constructor(
+
+): ViewModel() {
 
     private val _eventFlow = MutableSharedFlow<UiEvent>()
     val eventFlow = _eventFlow.asSharedFlow()
 
     fun onPracticeModeClicked() {
         viewModelScope.launch {
-            _eventFlow.emit(UiEvent.NavigateToGameScreen(isPractice = true))
+            _eventFlow.emit(UiEvent.NavigateToGameScreen(isPracticeMode = true))
         }
     }
 
-    fun onTimedModeCLicked() {
+    fun onTimedModeClicked() {
         viewModelScope.launch {
-            _eventFlow.emit(UiEvent.NavigateToGameScreen(isPractice = false))
+            _eventFlow.emit(UiEvent.NavigateToGameScreen(isPracticeMode = false))
         }
     }
-
 }
 
 sealed class UiEvent {
-    data class NavigateToGameScreen(val isPractice: Boolean) : UiEvent()
+    data class NavigateToGameScreen(val isPracticeMode: Boolean): UiEvent()
 }

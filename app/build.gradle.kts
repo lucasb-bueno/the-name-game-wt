@@ -91,4 +91,6 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     testImplementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.6.4")
     testImplementation("io.mockk:mockk:1.10.6")
+    testImplementation("app.cash.turbine:turbine:1.1.0")
+
 }
